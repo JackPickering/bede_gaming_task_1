@@ -1,0 +1,19 @@
+{
+  "name": "bede_gaming_task_1",
+  "version": "1.0.0",
+  "description": "A house keeping automation script for verbose logs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JackPickering/bede_gaming_task_1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JackPickering/bede_gaming_task_1/issues"
+  },
+  "homepage": "https://github.com/JackPickering/bede_gaming_task_1#readme"
+}
