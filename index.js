@@ -4,6 +4,9 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 
+// Private key is stored here for now however, in production should be moved to a server config variable
+const uploadcare = require('uploadcare')('254bcf1eacd25518ffeb', '1bc07154e5de0d22a756');
+
 /* 
  * Get data from the command line
  *
@@ -27,9 +30,8 @@ function runHouseKeeping(){
 	 	 * 
 	 	 * Run this job every night at midnight
 	 	 * I.e. everyday at 23:59:59pm 
-		 * var housekeeping = schedule.scheduleJob('59 59 23 * * *', function(){
 		 */
-		var housekeeping = schedule.scheduleJob('1 0-59 * * * *', function(){
+		var housekeeping = schedule.scheduleJob('59 59 23 * * *', function(){
 			checkLogFolder();
 		});
 
@@ -50,23 +52,48 @@ function checkLogFolder(){
 	getFolderSize(LOG_FOLDER, (err, size) => {
 	  	if (err) { throw err; }
 	 
-	  	console.log(size + ' bytes');
-
 	  	// If the size is bigger than the maximum limit
 	  	if(size > MAX_SIZE){
+
 	  		var file = getOldestFileName(LOG_FOLDER);
+	  		var path = LOG_FOLDER + '/' + file;
 
-	  			// If MOVE_FILES is unspecified, delete the oldest log file
-	  			if(MOVE_FILES == '' || MOVE_FILES == undefined){
-	  				fs.unlinkSync(LOG_FOLDER + '/' + file);
+  			// If MOVE_FILES is unspecified, delete the oldest log file else, move files to remote location
+  			if(MOVE_FILES == '' || MOVE_FILES == undefined){
+				removeFile(path);
+  			} else {
+  				moveAndRemoveFile(path);
+  				console.log('moving ' + path);
+  			}
 
-	  				// Recurse incase the folder is still bigger than MAX_SIZE
-	  				checkLogFolder();
-	  			} else {
-	  				
-	  			}
 	  	}
 	});
+}
+
+/*
+ * This code snippet has been pulled and edited from:
+ * https://github.com/RexMorgan/uploadcare-node
+ *
+ * Upload log file to uploadcare CDN and then remove it if successful
+ */
+function moveAndRemoveFile(path){
+    uploadcare.file.upload(fs.createReadStream(path), function(err,res){
+        
+        // If move was successful, remove file
+        if(!err){
+            removeFile(path);
+        } else {
+        	console.log(err);
+        }
+
+    });	
+}
+
+function removeFile(path) {
+  	fs.unlinkSync(path);
+
+  	// Check folder again incase folder is still above MAX_SIZE
+  	checkLogFolder();
 }
 
 /*
